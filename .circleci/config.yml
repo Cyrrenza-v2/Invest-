@@ -1,0 +1,43 @@
+version: 2.1
+
+jobs:
+  test_and_build:
+    docker:
+      - image: cimg/node:22.0
+    working_directory: ~/project
+    steps:
+      # This repository is public. Clone over HTTPS instead of CircleCI's
+      # SSH checkout, which fails when the project's SSH checkout key is empty.
+      - run:
+          name: Checkout source over HTTPS
+          command: |
+            set -eu
+            branch="${CIRCLE_BRANCH:-feature/platform-foundation}"
+            if ! git ls-remote --exit-code --heads https://github.com/Cyrrenza-v2/Invest-broker.git "$branch" >/dev/null 2>&1; then
+              echo "Branch '$branch' is not available as a public branch; falling back to feature/platform-foundation."
+              branch="feature/platform-foundation"
+            fi
+            git clone --depth 1 --branch "$branch" https://github.com/Cyrrenza-v2/Invest-broker.git .
+      - run:
+          name: Install dependencies
+          command: npm install
+      - run:
+          name: Run tests
+          command: npm test
+      - run:
+          name: Build web app
+          command: npm run build
+      - run:
+          name: Verify customer and admin installable app output
+          command: |
+            test -s dist/index.html
+            test -s dist/admin.html
+            test -s dist/user.webmanifest
+            test -s dist/admin.webmanifest
+            test -s dist/sw.js
+            test -s dist/icon.svg
+
+workflows:
+  invest_broker_ci:
+    jobs:
+      - test_and_build

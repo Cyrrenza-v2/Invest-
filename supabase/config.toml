@@ -1,0 +1,8 @@
+[functions.admin-api]
+verify_jwt = true
+
+[functions.admin-bootstrap]
+verify_jwt = true
+
+[functions.user-api]
+verify_jwt = true
