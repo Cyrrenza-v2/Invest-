@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#101827">
+<title>Invest-broker · AI Workflows</title>
+<style>
+:root{color-scheme:dark;--bg:#0b1220;--panel:#121d2e;--line:#26364b;--text:#eaf0f8;--muted:#9aabc0;--blue:#8ab4ff;--green:#77dfb0;--amber:#ffd58a}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#172842 0,#0b1220 58%);color:var(--text);font:16px/1.5 system-ui,-apple-system,Segoe UI,sans-serif}
+main{width:100%;max-width:1000px;margin:0 auto;padding:28px 18px 56px}
+.top{display:flex;gap:14px;align-items:center;margin-bottom:28px}
+.logo{display:grid;place-items:center;flex:0 0 48px;width:48px;height:48px;border-radius:15px;background:#1b3454;color:var(--blue);font-weight:800;font-size:22px}
+.eyebrow{color:var(--blue);font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase}
+.sub{color:var(--muted);margin:3px 0 0}
+.hero{padding:28px;border:1px solid var(--line);border-radius:22px;background:linear-gradient(130deg,#17273d,#101827 65%);margin-bottom:22px}
+.hero h1{font-size:clamp(28px,5vw,42px);line-height:1.1;margin:10px 0}
+.hero p{max-width:660px;color:var(--muted);margin-bottom:0}
+.status{display:inline-flex;align-items:center;gap:8px;border:1px solid #6d5a2e;background:#322a19;color:var(--amber);border-radius:999px;padding:6px 11px;font-size:12px;font-weight:700}
+.dot{width:7px;height:7px;flex:0 0 7px;border-radius:50%;background:var(--amber)}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.card{border:1px solid var(--line);background:rgba(18,29,46,.92);border-radius:18px;padding:22px;min-width:0}
+.cardhead{display:flex;align-items:center;gap:12px;min-width:0}
+.symbol{display:grid;place-items:center;flex:0 0 42px;width:42px;height:42px;border-radius:12px;background:#1c3048;color:var(--blue);font-weight:800;font-size:20px}
+.card h2{font-size:19px;margin:0;overflow-wrap:anywhere}
+.card .desc{color:var(--muted);font-size:14px;margin:14px 0 18px}
+.label{display:block;font-size:13px;color:#c5d2e2;font-weight:650;margin:13px 0 6px}
+input,textarea{display:block;width:100%;min-width:0;border:1px solid #35465d;border-radius:10px;padding:12px;background:#0c1524;color:var(--text);font:inherit;outline:none}
+textarea{min-height:86px;resize:vertical}
+input:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 0 2px rgba(138,180,255,.16)}
+button{width:100%;min-height:44px;margin-top:15px;border:0;border-radius:10px;padding:12px 14px;background:#8ab4ff;color:#0b1525;font:inherit;font-weight:800;cursor:pointer}
+button:focus-visible,a:focus-visible{outline:2px solid var(--blue);outline-offset:3px}
+button.secondary{background:#1d3048;color:#cfe0f7;border:1px solid #38506e}
+.note{font-size:12px;color:var(--muted);margin-top:10px}
+.output{display:none;margin-top:14px;padding:12px;border:1px solid #344b66;background:#0b1626;border-radius:10px;font-size:13px;color:#d6e4f7;overflow-wrap:anywhere}
+.checks{display:grid;gap:10px;margin-top:22px}
+.check{display:flex;gap:10px;align-items:flex-start;color:var(--muted);font-size:14px}
+.check b{color:var(--text)}
+.tick{color:var(--green);font-weight:900}
+.footer{border-top:1px solid var(--line);margin-top:24px;padding-top:18px;color:var(--muted);font-size:12px}
+.links{display:flex;flex-wrap:wrap;gap:14px;margin-top:12px}
+.links a{color:var(--blue);text-decoration:none}
+.links a:hover{text-decoration:underline}
+@media(max-width:680px){main{padding:18px 13px 38px}.hero{padding:21px}.grid{grid-template-columns:minmax(0,1fr)}.card{padding:18px}.status{align-items:flex-start;max-width:100%;white-space:normal}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+@media(max-width:680px){main{padding:18px 13px 38px}.hero{padding:21px}.grid{grid-template-columns:1fr}.card{padding:18px}}
+</style>
+</head>
+<body><main>
+<header class="top"><div class="logo">IB</div><div><div class="eyebrow">Invest-broker · Phase 1</div><p class="sub">Slack AI workflow integration</p></div></header>
+<section class="hero"><span class="status"><span class="dot"></span>Preview mode · Slack deployment pending</span><h1>Two AI workflows.<br>One secure setup.</h1><p>Use AI to answer questions with supplied context, or inspect a GitHub Actions run and get a grounded summary of failed jobs and steps. Financial operations are out of scope.</p></section>
+<section class="grid">
+<article class="card"><div class="cardhead"><div class="symbol">✦</div><div><div class="eyebrow">Workflow 01</div><h2>Answer with AI</h2></div></div><p class="desc">Ask a question and optionally provide background. In Slack, the configured workflow returns a concise AI answer.</p><label class="label" for="question">Your question</label><textarea id="question" placeholder="What would you like help understanding?"></textarea><label class="label" for="context">Optional context</label><textarea id="context" placeholder="Add relevant context (do not include secrets)."></textarea><button onclick="preview('answer')">Preview workflow input</button><div class="output" id="answer-output" role="status"></div><p class="note">This page previews input mapping only. It does not send data to an AI service.</p></article>
+<article class="card"><div class="cardhead"><div class="symbol">⌁</div><div><div class="eyebrow">Workflow 02</div><h2>Analyze build failure</h2></div></div><p class="desc">Provide a repository and workflow run ID. The Slack step reads run metadata and failed-step details, then suggests next debugging checks.</p><label class="label" for="repo">GitHub repository</label><input id="repo" value="Cyrrenza-v2/Invest-broker" autocomplete="off"><label class="label" for="runid">Workflow run ID</label><input id="runid" inputmode="numeric" placeholder="Example: 1234567890" autocomplete="off"><button class="secondary" onclick="preview('build')">Preview workflow input</button><div class="output" id="build-output" role="status"></div><p class="note">Requires the Slack app to be deployed and GitHub access configured. This page does not fetch a real run.</p></article>
+</section>
+<section class="card" style="margin-top:18px"><div class="eyebrow">Safety & readiness</div><h2 style="margin:7px 0 0">Deployment checklist</h2><div class="checks"><div class="check"><span class="tick">✓</span><span><b>Source scaffold committed</b><br>Two workflow function definitions and setup documentation.</span></div><div class="check"><span class="tick">✓</span><span><b>Credentials kept server-side</b><br>OpenAI and optional GitHub token are runtime secrets, never browser values.</span></div><div class="check"><span class="tick">✓</span><span><b>Financial actions excluded</b><br>No trade, wallet, deposit, or withdrawal controls are implemented here.</span></div><div class="check"><span style="color:var(--amber)">○</span><span><b>Slack deployment pending</b><br>Workspace authorization and secret configuration are required before live workflow tests.</span></div></div><div class="links"><a href="https://github.com/Cyrrenza-v2/Invest-broker/pull/4">Review pull request</a><a href="https://docs.slack.dev/workflows/workflow-steps/">Slack workflow-step docs</a><a href="https://github.com/Cyrrenza-v2/Invest-broker">Repository</a></div></section>
+<footer class="footer">Invest-broker AI workflow preview · No API credentials are stored in this page · No requests are sent from these preview buttons.</footer>
+</main>
+<script>
+function preview(kind){
+ const box=document.getElementById(kind+'-output');box.style.display='block';
+ if(kind==='answer'){
+  const q=document.getElementById('question').value.trim();const c=document.getElementById('context').value.trim();
+  box.textContent=q?('Input ready for Slack workflow. Question: '+q.slice(0,240)+(c?' · Context provided ('+c.length+' characters).':' · No context provided.')+' This preview does not call the AI service.'):'Enter a question first.';
+ }else{
+  const repo=document.getElementById('repo').value.trim();const id=document.getElementById('runid').value.trim();
+  box.textContent=/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(repo)&&/^\d+$/.test(id)?('Input format looks valid: '+repo+' · run '+id+'. Live analysis will be available after Slack deployment.'):'Enter a repository in owner/name format and a numeric run ID.';
+ }
+}
+</script>
+</body></html>

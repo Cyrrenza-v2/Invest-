@@ -1,0 +1,58 @@
+name: Phase 1 - CI and E2E readiness
+
+on:
+  push:
+    branches: ["main", "phase-1/**"]
+  pull_request:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: phase-1-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  workflow-source-check:
+    name: Check Slack workflow source
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: slack-ai-workflow
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Type-check workflow definitions
+        run: deno check manifest.ts functions/answer_question.ts functions/analyze_build_failure.ts
+
+  preview-e2e:
+    name: Browser E2E - static preview
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install pinned Playwright test runner
+        run: npm install --no-save --package-lock=false @playwright/test@1.56.1
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Start preview server
+        run: |
+          python3 -m http.server 4173 --directory slack-ai-workflow/web > /tmp/invest-broker-preview.log 2>&1 &
+          echo $! > /tmp/invest-broker-preview.pid
+      - name: Run browser E2E tests
+        run: npx playwright test
+      - name: Upload browser test report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase-1-playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          if-no-files-found: ignore
