@@ -1,0 +1,133 @@
+name: Supabase Migration Validation
+
+on:
+  pull_request:
+    paths:
+      - "supabase/**"
+      - ".github/workflows/supabase-migrations.yml"
+  push:
+    branches: [main]
+    paths:
+      - "supabase/**"
+      - ".github/workflows/supabase-migrations.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: supabase-migration-validation-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  migration-integrity:
+    name: Verify complete recorded migration history
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compare repository migrations with recorded production history
+        shell: bash
+        run: |
+          set -euo pipefail
+          expected=(
+            "20261010055354_invest_broker_shared_platform_foundation.sql"
+            "20261010055614_invest_broker_user_portal_support_features.sql"
+            "20261010055730_invest_broker_notification_read_state.sql"
+            "20261010060308_invest_broker_double_entry_ledger.sql"
+            "20261010060317_invest_broker_ledger_posting_guard.sql"
+            "20261010133726_invest_broker_account_approval_gate.sql"
+            "20261010133851_invest_broker_single_admin_control.sql"
+            "20261010133958_invest_broker_atomic_account_review.sql"
+            "20261010201831_bootstrap_single_primary_admin.sql"
+            "20261011171226_phase_2_realtime_admin_customer_updates.sql"
+            "20261011221255_platform_control_deny_client_access.sql"
+            "20261011221826_ledger_posting_requires_all_pending_lines.sql"
+            "20261012104812_payment_provider_test_scaffold.sql"
+            "20261012155617_deny_browser_access_payment_provider_tables.sql"
+            "20261015002132_revoke_api_access_from_foreign_table.sql"
+          )
+          missing=0
+          for file in "${expected[@]}"; do
+            if [[ ! -f "supabase/migrations/$file" ]]; then
+              echo "::error file=supabase/migrations/$file::Recorded production migration SQL is missing from Git."
+              missing=1
+            fi
+          done
+          if [[ "$missing" -ne 0 ]]; then
+            echo "::error::Migration history is incomplete. Recover originals or approve a separately reviewed baseline plan; do not fabricate historical files."
+            exit 1
+          fi
+          actual_count="$(find supabase/migrations -maxdepth 1 -type f -name '*.sql' | wc -l | tr -d ' ')"
+          if [[ "$actual_count" -ne "${#expected[@]}" ]]; then
+            echo "::error::Expected exactly ${#expected[@]} migration files; found $actual_count."
+            exit 1
+          fi
+          printf '%s\n' "${expected[@]}" | sort > /tmp/expected.txt
+          find supabase/migrations -maxdepth 1 -type f -name '*.sql' -printf '%f\n' | sort > /tmp/actual.txt
+          diff -u /tmp/expected.txt /tmp/actual.txt
+          echo "All 15 recorded migration filenames are present and match."
+
+  verified-subset-replay:
+    name: Replay exact-version recovered subset in isolated Supabase
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Ensure Supabase CLI configuration exists
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ ! -f supabase/config.toml ]]; then
+            npx --yes supabase@latest init
+          fi
+      - name: Isolate the three exact-version recovered migrations
+        shell: bash
+        run: |
+          set -euo pipefail
+          tmp="$(mktemp -d)"
+          cp supabase/migrations/20261010055354_invest_broker_shared_platform_foundation.sql "$tmp/"
+          cp supabase/migrations/20261010060308_invest_broker_double_entry_ledger.sql "$tmp/"
+          cp supabase/migrations/20261010060317_invest_broker_ledger_posting_guard.sql "$tmp/"
+          find supabase/migrations -maxdepth 1 -type f -name '*.sql' -delete
+          cp "$tmp"/*.sql supabase/migrations/
+          test "$(find supabase/migrations -maxdepth 1 -type f -name '*.sql' | wc -l | tr -d ' ')" = "3"
+      - name: Start isolated local Supabase
+        run: npx --yes supabase@latest start
+      - name: Replay recovered subset from an empty database
+        run: npx --yes supabase@latest db reset --local
+      - name: Lint recovered subset schema
+        run: npx --yes supabase@latest db lint --local
+      - name: Stop isolated Supabase
+        if: always()
+        run: npx --yes supabase@latest stop --no-backup
+
+  full-local-replay:
+    name: Replay and lint complete migration history
+    runs-on: ubuntu-latest
+    needs: migration-integrity
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Ensure Supabase CLI configuration exists
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ ! -f supabase/config.toml ]]; then
+            npx --yes supabase@latest init
+          fi
+      - name: Start isolated local Supabase
+        run: npx --yes supabase@latest start
+      - name: Replay complete migration sequence from an empty database
+        run: npx --yes supabase@latest db reset --local
+      - name: Lint complete local schema
+        run: npx --yes supabase@latest db lint --local
+      - name: Stop isolated Supabase
+        if: always()
+        run: npx --yes supabase@latest stop --no-backup
+
+# Intentionally no production migration/deploy job. Production stays gated until
+# the complete migration chain or a separately reviewed baseline plan is approved.

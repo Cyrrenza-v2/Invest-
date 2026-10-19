@@ -1,0 +1,71 @@
+name: Export read-only Supabase schema snapshot
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: supabase-schema-snapshot
+  cancel-in-progress: false
+
+jobs:
+  schema-only-export:
+    name: Export public schema without application data
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Require the configured Supabase URL secret
+        shell: bash
+        env:
+          SUPABASE_DB_URL: ${{ secrets.Invest_broker_api_url }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${SUPABASE_DB_URL}" ]]; then
+            echo "::error::Add the repository Actions secret Invest_broker_api_url, then rerun this workflow."
+            exit 1
+          fi
+          if [[ "${SUPABASE_DB_URL}" != postgres://* && "${SUPABASE_DB_URL}" != postgresql://* ]]; then
+            echo "::error::Invest_broker_api_url must contain a PostgreSQL connection URI (postgres:// or postgresql://) for schema export. A Supabase HTTPS API/project URL cannot be used by supabase db dump."
+            exit 1
+          fi
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Export schema only
+        shell: bash
+        env:
+          SUPABASE_DB_URL: ${{ secrets.Invest_broker_api_url }}
+        run: |
+          set -euo pipefail
+          output="$RUNNER_TEMP/invest-broker-public-schema.sql"
+          npx --yes supabase@latest db dump \
+            --db-url "$SUPABASE_DB_URL" \
+            --schema public \
+            --file "$output"
+          test -s "$output"
+          if grep -Eiq '^(COPY|INSERT INTO) ' "$output"; then
+            echo "::error::Unexpected data statements found in schema-only export."
+            exit 1
+          fi
+          {
+            echo "## Schema-only export"
+            echo
+            echo "- Scope: public schema DDL only; no table rows requested."
+            echo "- Review required before using this snapshot as a fresh-environment baseline."
+            echo "- Do not commit or apply this snapshot to production automatically."
+            echo "- Check dependencies on Supabase-managed auth/storage schemas and extensions."
+          } > "$RUNNER_TEMP/README.txt"
+
+      - name: Upload review artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: invest-broker-public-schema-review
+          path: |
+            ${{ runner.temp }}/invest-broker-public-schema.sql
+            ${{ runner.temp }}/README.txt
+          if-no-files-found: error
+          retention-days: 3

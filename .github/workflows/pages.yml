@@ -1,0 +1,99 @@
+name: Deploy Invest Broker to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Update npm installer
+        run: npm install --global npm@11.6.2
+
+      # Bootstrap a real lockfile once, commit it, and use reproducible installs
+      # on this and all subsequent runs. Legacy peer resolution matches the
+      # dependency resolution used by the previous successful-install attempt.
+      - name: Generate and commit missing package lock
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ ! -f package-lock.json ]; then
+            npm install --package-lock-only --ignore-scripts --legacy-peer-deps --no-audit --no-fund
+            test -s package-lock.json
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add package-lock.json
+            git commit -m "Add npm package lockfile"
+            git push origin HEAD:main
+          fi
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps --no-audit --no-fund
+
+      - name: Type-check application
+        run: npx tsc --noEmit
+
+      - name: Build customer portal
+        run: VITE_APP_ROLE=user npx vite build --base=/Invest-broker/ --outDir dist-user
+
+      - name: Build admin portal
+        run: VITE_APP_ROLE=admin npx vite build --base=/Invest-broker/admin/ --outDir dist-admin
+
+      - name: Assemble and validate both portals
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist dist/admin
+          cp -a dist-user/. dist/
+          cp -a dist-admin/. dist/admin/
+          touch dist/.nojekyll
+
+          test -s dist/index.html
+          test -s dist/admin/index.html
+          test -d dist/assets
+          test -d dist/admin/assets
+          test -n "$(find dist/assets -maxdepth 1 -type f -name '*.js' -print -quit)"
+          test -n "$(find dist/admin/assets -maxdepth 1 -type f -name '*.js' -print -quit)"
+
+          echo "Customer and admin portal entry points and JavaScript assets are present."
+          echo "Customer portal base: /Invest-broker/"
+          echo "Admin portal base: /Invest-broker/admin/"
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Publish to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

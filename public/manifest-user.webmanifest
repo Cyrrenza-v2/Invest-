@@ -1,0 +1,15 @@
+{
+  "id": "./?app=customer",
+  "name": "Invest Broker",
+  "short_name": "Invest Broker",
+  "description": "Invest Broker customer portal preview",
+  "start_url": "./#/login/user",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f4f7fb",
+  "theme_color": "#0f766e",
+  "icons": [
+    { "src": "./icons/invest-broker-user.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

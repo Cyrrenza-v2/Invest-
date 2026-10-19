@@ -1,0 +1,16 @@
+project_id = "rjgzvpkyccfpnpzlbcuc"
+
+[functions.user-api]
+verify_jwt = true
+
+[functions.admin-api]
+verify_jwt = true
+
+[functions.admin-bootstrap]
+verify_jwt = true
+
+[functions.admin-ai]
+verify_jwt = true
+
+[functions.payment-api]
+verify_jwt = true
