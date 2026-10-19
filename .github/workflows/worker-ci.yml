@@ -1,0 +1,93 @@
+name: Invest Broker Worker CI
+
+on:
+  push:
+    branches:
+      - main
+      - feature/cloudflare-durable-object-api
+      - feature/separate-portals-pwa
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Build frontend and test Worker
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund --legacy-peer-deps
+      - name: Build customer portal
+        run: npm run build
+      - name: Build admin portal
+        run: VITE_APP_ROLE=admin npm run build
+      - name: Test Worker, SQLite persistence, idempotency, and eviction recovery
+        run: npm run test:worker
+      - name: Validate Wrangler configuration
+        run: npx wrangler deploy --dry-run --config wrangler.jsonc
+
+  deploy-test-worker:
+    name: Deploy and probe test Worker
+    runs-on: ubuntu-latest
+    needs: verify
+    # Keep test deployment paused until the Cloudflare token is valid for CI runner IPs.
+    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main' && vars.CLOUDFLARE_DEPLOY_ENABLED == 'true'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund --legacy-peer-deps
+      - name: Require Cloudflare credentials
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN || secrets.CLOUDFLARE_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          missing=()
+          [[ -n "$CLOUDFLARE_API_TOKEN" ]] || missing+=("CLOUDFLARE_API_TOKEN (or legacy CLOUDFLARE_TOKEN)")
+          [[ -n "$CLOUDFLARE_ACCOUNT_ID" ]] || missing+=("CLOUDFLARE_ACCOUNT_ID")
+          if (( ${#missing[@]} )); then
+            printf 'ERROR: GitHub Actions did not expose required secret(s): %s\n' "${missing[*]}" >&2
+            echo "Add the required credentials as repository Actions secrets or attach the referenced environment. Secret values are never printed." >&2
+            exit 1
+          fi
+      - name: Deploy test-only Worker
+        id: deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN || secrets.CLOUDFLARE_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx wrangler deploy --config wrangler.jsonc 2>&1 | tee deploy.log
+          url="$(grep -Eo 'https://[A-Za-z0-9.-]+\.workers\.dev' deploy.log | head -n 1 || true)"
+          if [[ -z "$url" ]]; then
+            echo "ERROR: Wrangler deploy succeeded but no workers.dev URL was found in its output." >&2
+            exit 1
+          fi
+          echo "worker_url=$url" >> "$GITHUB_OUTPUT"
+      - name: Verify deployed health endpoint and protected-route gate
+        env:
+          WORKER_URL: ${{ steps.deploy.outputs.worker_url }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error "$WORKER_URL/health"
+          status="$(curl --silent --output /dev/null --write-out '%{http_code}' "$WORKER_URL/api/v1/summary?accountId=release-probe")"
+          test "$status" = "401"
+          echo "Health endpoint passed; protected API rejects unauthenticated access (HTTP $status)."

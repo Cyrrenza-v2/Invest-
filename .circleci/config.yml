@@ -1,0 +1,39 @@
+version: 2.1
+
+jobs:
+  test_and_build:
+    docker:
+      - image: cimg/node:22.0
+    working_directory: ~/project
+    steps:
+      # Use HTTPS so a missing/empty CircleCI SSH checkout key cannot block a public repo.
+      - run:
+          name: Checkout application source over HTTPS
+          command: |
+            set -eu
+            branch="${CIRCLE_BRANCH:-main}"
+            source_dir="/tmp/invest-broker-source"
+            rm -rf "$source_dir"
+            git clone --depth 1 --branch "$branch" https://github.com/Cyrrenza-v2/Invest-broker.git "$source_dir"
+            test -s "$source_dir/package.json"
+            test -s "$source_dir/package-lock.json"
+            cp -a "$source_dir/." .
+            rm -rf "$source_dir"
+      - run:
+          name: Install locked dependencies
+          command: npm ci --no-audit --no-fund --legacy-peer-deps
+      - run:
+          name: Type-check and build production assets
+          command: npm run build
+      - run:
+          name: Verify Vite build output
+          command: |
+            set -eu
+            test -s dist/index.html
+            test -d dist/assets
+            find dist/assets -maxdepth 1 -type f \( -name '*.js' -o -name '*.css' \) | grep -q .
+
+workflows:
+  invest_broker_ci:
+    jobs:
+      - test_and_build
