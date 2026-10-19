@@ -1,0 +1,63 @@
+{
+  "redirects": [
+    {
+      "source": "/admin",
+      "has": [{ "type": "host", "value": "invest-broker.vercel.app" }],
+      "destination": "https://admin-invest-broker.vercel.app/admin/dashboard",
+      "permanent": false
+    },
+    {
+      "source": "/admin/:path*",
+      "has": [{ "type": "host", "value": "invest-broker.vercel.app" }],
+      "destination": "https://admin-invest-broker.vercel.app/admin/:path*",
+      "permanent": false
+    },
+    {
+      "source": "/admin.html",
+      "has": [{ "type": "host", "value": "invest-broker.vercel.app" }],
+      "destination": "https://admin-invest-broker.vercel.app/admin/dashboard",
+      "permanent": false
+    },
+    {
+      "source": "/admin.webmanifest",
+      "has": [{ "type": "host", "value": "invest-broker.vercel.app" }],
+      "destination": "https://admin-invest-broker.vercel.app/admin/dashboard",
+      "permanent": false
+    },
+    {
+      "source": "/index.html",
+      "has": [{ "type": "host", "value": "admin-invest-broker.vercel.app" }],
+      "destination": "/admin/dashboard",
+      "permanent": false
+    },
+    {
+      "source": "/user.webmanifest",
+      "has": [{ "type": "host", "value": "admin-invest-broker.vercel.app" }],
+      "destination": "/admin/dashboard",
+      "permanent": false
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "admin-invest-broker.vercel.app" }],
+      "destination": "/admin.html"
+    },
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "invest-broker.vercel.app" }],
+      "destination": "/index.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/:path*",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
+        { "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=()" },
+        { "key": "X-Frame-Options", "value": "DENY" }
+      ]
+    }
+  ]
+}

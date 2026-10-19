@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#111a2b" />
+    <link rel="manifest" href="/admin.webmanifest" />
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    <meta name="description" content="Invest Broker restricted administration portal." />
+    <title>Invest Broker | Admin Portal</title>
+  </head>
+  <body>
+    <div id="admin-root"></div>
+    <script>if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("/sw.js").catch(()=>{}));}</script>
+    <script type="module" src="/src/admin.jsx"></script>
+  </body>
+</html>
