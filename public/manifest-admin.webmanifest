@@ -1,0 +1,15 @@
+{
+  "id": "./?app=admin",
+  "name": "Invest Broker Admin",
+  "short_name": "IB Admin",
+  "description": "Private Invest Broker administration preview",
+  "start_url": "./#/login/admin",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f4f7fb",
+  "theme_color": "#1d4ed8",
+  "icons": [
+    { "src": "./icons/invest-broker-admin.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
