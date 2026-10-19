@@ -1,0 +1,19 @@
+# This is an unused Azure/Python template workflow. Invest Broker is a Node/Vite
+# application and this repository does not contain requirements.txt or an Azure
+# App Service publish profile. Keep it manual-only to prevent unrelated failed
+# deployments on every push. Use the project CI workflow for normal verification.
+
+name: Azure Python template (manual only)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  template-not-configured:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Explain why this template does not run automatically
+        run: echo "This repository is not configured for Azure Python deployment. Use the Invest Broker CI workflow instead."
