@@ -1,0 +1,45 @@
+name: Invest Broker CI
+
+on:
+  push:
+    branches: [main, "feature/**", "fix/**"]
+  pull_request:
+    branches: [main, "feature/**"]
+  workflow_dispatch:
+
+concurrency:
+  group: invest-broker-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Test, build, and verify isolated app shells
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies
+        # package-lock.json is not committed yet, so npm ci is not safe to use.
+        run: npm install --no-audit --no-fund
+      - name: Test route, host-isolation, and PWA contracts
+        run: npm test
+      - name: Build customer and admin applications
+        run: npm run build
+      - name: Verify installable app artifacts
+        run: |
+          set -eu
+          test -s dist/index.html
+          test -s dist/admin.html
+          test -s dist/user.webmanifest
+          test -s dist/admin.webmanifest
+          test -s dist/sw.js
+          test -s dist/icon.svg
+          node --input-type=module -e 'import fs from "node:fs"; const c=JSON.parse(fs.readFileSync("vercel.json","utf8")); if(!c.rewrites.some(r=>r.destination==="/admin.html"&&r.has?.some(h=>h.type==="host"&&h.value==="admin-invest-broker.vercel.app"))) process.exit(1); if(!c.rewrites.some(r=>r.destination==="/index.html"&&r.has?.some(h=>h.type==="host"&&h.value==="invest-broker.vercel.app"))) process.exit(1);'
