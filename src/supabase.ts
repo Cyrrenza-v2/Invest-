@@ -97,9 +97,20 @@ export const supabase = {
     try {
       return await request<SupabaseUser>('/auth/v1/user', { method: 'GET' });
     } catch (error) {
-      if (error instanceof SupabaseError && (error.status === 401 || error.status === 403) && session.refresh_token) {
-        try { const refreshed = await this.refreshSession(); if (refreshed?.access_token) return await request<SupabaseUser>('/auth/v1/user', { method: 'GET' }); } catch { /* preserve session during transient errors */ }
+      if (error instanceof SupabaseError && (error.status === 401 || error.status === 403)) {
+        if (session.refresh_token) {
+          try {
+            const refreshed = await this.refreshSession();
+            if (refreshed?.access_token) return await request<SupabaseUser>('/auth/v1/user', { method: 'GET' });
+          } catch {
+            // A rejected refresh token means this saved session can no longer authenticate.
+          }
+        }
+        // Never treat cached user details as proof of a valid server-side session.
+        saveSession(null);
+        return null;
       }
+      // Keep cached identity only for transient network/server errors, not auth failures.
       return session.user ?? null;
     }
   },
@@ -118,10 +129,12 @@ export const supabase = {
     return request<T[]>(`/rest/v1/${encodeURIComponent(table)}?${query}`, { method: 'PATCH', headers: { Prefer: 'return=representation' }, body: JSON.stringify(body) });
   },
   async edge<T = unknown>(functionName: string, route: string, options: { method?: 'GET' | 'POST'; body?: Row; query?: string } = {}): Promise<T> {
+    if (!getSession()?.access_token) throw new SupabaseError('Sign in again to continue. No authenticated session is available.');
     const method = options.method ?? 'GET'; const suffix = options.query ? `?${options.query}` : '';
     return request<T>(`/functions/v1/${encodeURIComponent(functionName)}/${encodeURIComponent(route)}${suffix}`, { method, ...(method === 'POST' ? { body: JSON.stringify(options.body ?? {}) } : {}) });
   },
   async invoke<T = unknown>(functionName: string, body: Row): Promise<T> {
+    if (!getSession()?.access_token) throw new SupabaseError('Sign in again to continue. No authenticated session is available.');
     return request<T>(`/functions/v1/${encodeURIComponent(functionName)}`, { method: 'POST', body: JSON.stringify(body) });
   },
 };
