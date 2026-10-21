@@ -14,13 +14,13 @@ jobs:
             branch="${CIRCLE_BRANCH:-main}"
             source_dir="/tmp/invest-broker-source"
             rm -rf "$source_dir"
-            git clone --depth 1 --branch "$branch" https://github.com/Cyrrenza-v2/Invest-broker.git "$source_dir"
+            git clone --depth 1 --branch "$branch" https://github.com/Cyrrenza-v2/Invest-.git "$source_dir"
             test -s "$source_dir/package.json"
             cp -a "$source_dir/." .
             rm -rf "$source_dir"
       - run:
           name: Install dependencies
-          command: npm install --no-audit --no-fund
+          command: npm ci --no-audit --no-fund
       - run:
           name: Type-check and build production assets
           command: npm run build
