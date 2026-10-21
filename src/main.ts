@@ -40,11 +40,30 @@ function title(p: string) {
   return names[p] || 'Invest Broker';
 }
 function shell(body: string, active: string) {
-  const links = ROLE === 'user' ? userLinks : adminLinks;
-  return '<div class="app-layout"><aside class="sidebar"><a class="brand" href="#/welcome"><span class="brand-mark">IB</span><span><strong>Invest Broker</strong><small>' + (ROLE === 'user' ? 'Customer workspace' : 'Admin CEO workspace') + '</small></span></a><nav class="sidebar-nav">' +
-    links.map(l => '<a class="menu-link ' + (active === l[0] ? 'is-active' : '') + '" href="#' + l[0] + '">' + l[1] + '</a>').join('') +
-    '</nav><div class="sidebar-foot"><span class="live-dot"></span> Authenticated workspace</div></aside><main class="main-panel"><header class="topbar"><div><p class="eyebrow">' + (ROLE === 'user' ? 'Customer portal' : 'Restricted operations') + '</p><h1>' + e(title(active)) + '</h1></div><div class="top-actions"><span class="account-pill">' + e(d.profile?.full_name || d.user?.email || 'Account') + '</span><button class="ghost" data-action="refresh">Refresh</button><button class="ghost" data-action="logout">Sign out</button></div></header>' +
-    (d.error ? '<div class="notice notice-error">' + e(d.error) + '</div>' : '') + (d.notice ? '<div class="notice notice-info">' + e(d.notice) + '</div>' : '') + body +
+  const groups: Array<{label:string; items:string[][]}> = ROLE === 'user' ? [
+    {label:'Overview',items:[userLinks[0]]},
+    {label:'Investments',items:[userLinks[1]]},
+    {label:'Wallet',items:[userLinks[2],userLinks[3],userLinks[4],userLinks[5]]},
+    {label:'Account',items:[userLinks[8],userLinks[7],userLinks[6],userLinks[9],userLinks[10]]},
+  ] : [
+    {label:'Dashboard',items:[adminLinks[0]]},
+    {label:'Customers',items:[adminLinks[1],adminLinks[2]]},
+    {label:'Investments & transactions',items:[adminLinks[3],adminLinks[4],adminLinks[5],adminLinks[6],adminLinks[7],adminLinks[8]]},
+    {label:'Operations',items:[adminLinks[9],adminLinks[10],adminLinks[11],adminLinks[12],adminLinks[13],adminLinks[14],adminLinks[15]]},
+  ];
+  const activeGroup = groups.find(g => g.items.some(item => item[0] === active)) || groups[0];
+  const primaryNav = groups.map(g => {
+    const target = g.items[0][0];
+    const selected = g === activeGroup;
+    return '<a class="primary-nav-link ' + (selected ? 'is-active' : '') + '" href="#' + target + '" aria-current="' + (selected ? 'page' : 'false') + '">' + e(g.label) + '</a>';
+  }).join('');
+  const sectionNav = activeGroup.items.map(item =>
+    '<a class="section-nav-link ' + (active === item[0] ? 'is-active' : '') + '" href="#' + item[0] + '" ' + (active === item[0] ? 'aria-current="page"' : '') + '>' + e(item[1]) + '</a>'
+  ).join('');
+  return '<div class="app-layout"><aside class="sidebar"><a class="brand" href="#/welcome"><span class="brand-mark">IB</span><span><strong>Invest Broker</strong><small>' + (ROLE === 'user' ? 'Customer workspace' : 'Admin CEO workspace') + '</small></span></a><nav class="sidebar-nav primary-nav" aria-label="Primary navigation">' + primaryNav + '</nav>' +
+    '<nav class="section-nav" aria-label="' + e(activeGroup.label) + ' navigation">' + sectionNav + '</nav>' +
+    '<div class="sidebar-foot"><span class="live-dot"></span> Authenticated workspace</div></aside><main class="main-panel"><header class="topbar"><div><p class="eyebrow">' + (ROLE === 'user' ? 'Customer portal' : 'Restricted operations') + '</p><h1>' + e(title(active)) + '</h1></div><div class="top-actions"><span class="account-pill">' + e(d.profile?.full_name || d.user?.email || 'Account') + '</span><button class="ghost" data-action="refresh">Refresh</button><button class="ghost" data-action="logout">Sign out</button></div></header>' +
+    (d.error ? '<div class="notice notice-error" role="alert">' + e(d.error) + '</div>' : '') + (d.notice ? '<div class="notice notice-info" role="status">' + e(d.notice) + '</div>' : '') + body +
     '<footer class="app-footer">Account records are returned by Supabase-authenticated APIs. No demo financial balances are substituted.</footer></main></div>';
 }
 function welcome() {
