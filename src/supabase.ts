@@ -128,10 +128,10 @@ export const supabase = {
   async update<T extends Row = Row>(table: string, query: string, body: Row): Promise<T[]> {
     return request<T[]>(`/rest/v1/${encodeURIComponent(table)}?${query}`, { method: 'PATCH', headers: { Prefer: 'return=representation' }, body: JSON.stringify(body) });
   },
-  async edge<T = unknown>(functionName: string, route: string, options: { method?: 'GET' | 'POST'; body?: Row; query?: string } = {}): Promise<T> {
+  async edge<T = unknown>(functionName: string, route: string, options: { method?: 'GET' | 'POST'; body?: Row; query?: string; signal?: AbortSignal } = {}): Promise<T> {
     if (!getSession()?.access_token) throw new SupabaseError('Sign in again to continue. No authenticated session is available.');
     const method = options.method ?? 'GET'; const suffix = options.query ? `?${options.query}` : '';
-    return request<T>(`/functions/v1/${encodeURIComponent(functionName)}/${encodeURIComponent(route)}${suffix}`, { method, ...(method === 'POST' ? { body: JSON.stringify(options.body ?? {}) } : {}) });
+    return request<T>(`/functions/v1/${encodeURIComponent(functionName)}/${encodeURIComponent(route)}${suffix}`, { method, signal: options.signal, ...(method === 'POST' ? { body: JSON.stringify(options.body ?? {}) } : {}) });
   },
   async invoke<T = unknown>(functionName: string, body: Row): Promise<T> {
     if (!getSession()?.access_token) throw new SupabaseError('Sign in again to continue. No authenticated session is available.');
