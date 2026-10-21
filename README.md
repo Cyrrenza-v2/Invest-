@@ -1,3 +1,5 @@
+[![Invest Broker Worker CI](https://github.com/Cyrrenza-v2/Invest-/actions/workflows/worker-ci.yml/badge.svg?branch=main&event=push)](https://github.com/Cyrrenza-v2/Invest-/actions/workflows/worker-ci.yml)
+
 # Invest-broker
 Yes. Let's make the blueprint fully separated into two sides: the User Platform and your Admin/Manager Platform. Both connect to the same secure core backend, but the screens, permissions, and functions remain separate.
 
