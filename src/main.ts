@@ -280,7 +280,7 @@ async function authSubmit(event: SubmitEvent, form: HTMLFormElement) {
     const invalidCredentials = /invalid login credentials/i.test(rawMessage);
     d.error = invalidCredentials && ROLE === 'user'
       ? 'We could not sign you in. Check that this email is registered in this Invest Broker project and that the password is correct. If you just registered, confirm your email first. If you still cannot sign in, use Forgot password or contact support.'
-      : rawMessage.replace(/^\\/auth\\/v1\\/[^:]+:\\s*/i, '');
+      : rawMessage.replace(/^\/auth\/v1\/[^:]+:\s*/i, '');
     app!.innerHTML = authPage(form.dataset.mode === 'register' ? 'register' : 'login');
     const box = document.createElement('div'); box.className = 'notice notice-error'; box.setAttribute('role', 'alert'); box.textContent = d.error; app!.querySelector('.auth-card')?.prepend(box);
   } finally { if (btn) { btn.disabled = false; btn.textContent = form.dataset.mode === 'register' ? 'Create customer account' : 'Sign in securely'; } }
