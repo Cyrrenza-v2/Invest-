@@ -187,7 +187,7 @@ function adminContent(p: string): string {
       reference:String(x.reference || x.transaction_hash || x.deposit_code || x.withdrawal_code || x.investment_code || x.id || '—')
     })));
     const reviewStates = new Set(['failed','rejected','blocked','flagged','chargeback','disputed','under_review','manual_review','suspicious']);
-    const candidates = evidence.filter(x => reviewStates.has(x.status.toLowerCase().replace(/\\s+/g,'_')));
+    const candidates = evidence.filter(x => reviewStates.has(x.status.toLowerCase().replace(/\s+/g,'_')));
     const rows = (candidates.length ? candidates : evidence).slice(0,200).map(x => [
       e(x.kind), '<a href="#' + x.route + '">' + e(x.id) + '</a>', e(x.user), e(x.reference),
       status(x.status), e(x.description || '—'), e(date(x.date))
