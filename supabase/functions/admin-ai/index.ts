@@ -63,6 +63,15 @@ Deno.serve(async (req: Request) => {
   if (!control?.primary_admin_user_id) return respond(req, { error: "Primary administrator has not been assigned" }, 503);
   if (control.primary_admin_user_id !== user.id) return respond(req, { error: "This account is not the assigned primary administrator" }, 403);
 
+  // Match the Admin API's live profile gate so suspended or unapproved accounts
+  // cannot continue using privileged AI after their profile status changes.
+  const { data: adminProfile, error: profileError } = await db.from("profiles")
+    .select("account_status,approval_status").eq("id", user.id).maybeSingle();
+  if (profileError) return respond(req, { error: "Unable to verify administrator account status" }, 500);
+  if (!adminProfile || adminProfile.account_status !== "active" || adminProfile.approval_status !== "approved") {
+    return respond(req, { error: "Active, approved administrator account required" }, 403);
+  }
+
   const payload = await req.json().catch(() => null);
   const question = typeof payload?.question === "string" ? payload.question.trim() : "";
   if (!question || question.length > 1200) return respond(req, { error: "Question must contain between 1 and 1200 characters" }, 400);
