@@ -1202,8 +1202,6 @@ packages:
 
 snapshots:
 
-  '@vercel/analytics@2.0.1': {}
-
   '@cloudflare/kv-asset-handler@0.5.0': {}
 
   '@cloudflare/unenv-preset@2.16.2(unenv@2.0.0-rc.24)(workerd@1.20261012.1)':
