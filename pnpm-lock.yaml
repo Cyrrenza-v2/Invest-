@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@vercel/analytics':
+        specifier: ^2.0.1
+        version: 2.0.1
       otplib:
         specifier: ^12.0.1
         version: 12.0.1
@@ -1198,6 +1201,8 @@ packages:
     resolution: {integrity: sha512-v5l/aFXZQeai4awLbOpSoHecE9UiMrnfx75tEXLjNonXVARxQ5mOeipTjROUchszUNCqnE+hqAMujRsRHsut2Q==}
 
 snapshots:
+
+  '@vercel/analytics@2.0.1': {}
 
   '@cloudflare/kv-asset-handler@0.5.0': {}
 
