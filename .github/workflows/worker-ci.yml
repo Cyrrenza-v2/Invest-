@@ -6,6 +6,7 @@ on:
       - main
       - feature/cloudflare-durable-object-api
       - feature/separate-portals-pwa
+      - fix/customer-login-error-message
   pull_request:
   workflow_dispatch:
 
