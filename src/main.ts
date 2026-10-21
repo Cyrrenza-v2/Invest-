@@ -40,12 +40,11 @@ function title(p: string) {
   return names[p] || 'Invest Broker';
 }
 function shell(body: string, active: string) {
-  const links = ROLE === 'user' ? userLinks : adminLinks;
   const groups: Array<{label:string; items:string[][]}> = ROLE === 'user' ? [
     {label:'Overview',items:[userLinks[0]]},
     {label:'Investments',items:[userLinks[1]]},
     {label:'Wallet',items:[userLinks[2],userLinks[3],userLinks[4],userLinks[5]]},
-    {label:'Account',items:[userLinks[6],userLinks[7],userLinks[8],userLinks[9],userLinks[10]]},
+    {label:'Account',items:[userLinks[8],userLinks[7],userLinks[6],userLinks[9],userLinks[10]]},
   ] : [
     {label:'Dashboard',items:[adminLinks[0]]},
     {label:'Customers',items:[adminLinks[1],adminLinks[2]]},
