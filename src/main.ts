@@ -173,7 +173,8 @@ function userContent(p: string): string {
 function productionSafetyGate(): string {
   return '<section class="notice notice-error" role="alert" aria-live="polite"><strong>PRODUCTION SAFETY GATE — FINANCIAL OPERATIONS NOT CLEARED</strong><p>Dashboard figures are calculated from the database records currently readable by this session. Empty tables mean no records have been loaded; they do not prove zero exposure, zero risk, or a reconciled financial position.</p><p><strong>Do not approve, release, settle, or move customer funds</strong> until server-side transaction workflows, ledger posting and reconciliation, and the payment/custody provider have been independently verified. Keep real-money operations disabled until those checks pass.</p></section>';
 }
-function adminContent(p: string): string {\n  if (p === '/admin/fraud-investigations') {
+function adminContent(p: string): string {
+  if (p === '/admin/fraud-investigations') {
     const sources: Array<{kind:string;route:string;rows:RecordRow[]}> = [
       {kind:'Investment',route:'/admin/investments',rows:d.investments},
       {kind:'Deposit',route:'/admin/deposits',rows:d.deposits},
