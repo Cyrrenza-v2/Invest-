@@ -19,8 +19,8 @@ const status = (v: unknown) => { const s = String(v || 'unknown'); const t = ['a
 const path = () => location.hash.replace(/^#/, '') || '/welcome';
 const go = (p: string) => { location.hash = p; };
 const err = (x: unknown) => x instanceof Error ? x.message : 'Unexpected error';
-async function edge<T>(fn: string, endpoint: string, method: 'GET'|'POST' = 'GET', body?: Row, query?: string): Promise<T> {
-  const r = await supabase.edge<{data:T}|T>(fn, endpoint, { method, body, query });
+async function edge<T>(fn: string, endpoint: string, method: 'GET'|'POST' = 'GET', body?: Row, query?: string, signal?: AbortSignal): Promise<T> {
+  const r = await supabase.edge<{data:T}|T>(fn, endpoint, { method, body, query, signal });
   return r && typeof r === 'object' && 'data' in r ? (r as {data:T}).data : r as T;
 }
 function table(head: string[], rows: string[][], empty = 'No records found.') {
