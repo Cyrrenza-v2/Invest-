@@ -6,7 +6,7 @@ type WebMCPContext = {
   trustedAdmin: boolean;
   aal2: boolean;
 };
-type EdgeCall = <T>(fn: string, endpoint: string, method?: 'GET' | 'POST', body?: Record<string, unknown>, query?: string) => Promise<T>;
+type EdgeCall = <T>(fn: string, endpoint: string, method?: 'GET' | 'POST', body?: Record<string, unknown>, query?: string, signal?: AbortSignal) => Promise<T>;
 type ToolDefinition = {
   name: string;
   title: string;
@@ -93,7 +93,7 @@ export async function syncInvestBrokerWebMCP(
       async execute(_input, { signal }) {
         if (signal?.aborted) throw new Error('Request cancelled.');
         requireSession(getContext(), 'user');
-        const p = await edge<Record<string, unknown>>('user-api', 'profile');
+        const p = await edge<Record<string, unknown>>('user-api', 'profile', 'GET', undefined, undefined, signal);
         if (signal?.aborted) throw new Error('Request cancelled.');
         return {
           approval_status: p?.approval_status ?? null,
@@ -119,7 +119,7 @@ export async function syncInvestBrokerWebMCP(
       async execute(input, { signal }) {
         requireSession(getContext(), 'user');
         const filter = optionalStatus(input.status);
-        const rows = await edge<Record<string, unknown>[]>('user-api', 'investments');
+        const rows = await edge<Record<string, unknown>[]>('user-api', 'investments', 'GET', undefined, undefined, signal);
         if (signal?.aborted) throw new Error('Request cancelled.');
         return (Array.isArray(rows) ? rows : [])
           .filter(row => !filter || row.status === filter)
@@ -155,7 +155,7 @@ export async function syncInvestBrokerWebMCP(
         if (category !== undefined && !['deposit', 'withdrawal', 'investment', 'return', 'adjustment'].includes(String(category))) {
           throw new Error('Choose a supported transaction category.');
         }
-        const rows = await edge<Record<string, unknown>[]>('user-api', 'transactions');
+        const rows = await edge<Record<string, unknown>[]>('user-api', 'transactions', 'GET', undefined, undefined, signal);
         if (signal?.aborted) throw new Error('Request cancelled.');
         return (Array.isArray(rows) ? rows : [])
           .filter(row => !category || row.entry_type === category)
@@ -183,7 +183,7 @@ export async function syncInvestBrokerWebMCP(
       annotations: { readOnlyHint: true, untrustedContentHint: false },
       async execute(_input, { signal }) {
         requireSession(getContext(), 'admin');
-        const summary = await edge<Record<string, unknown>>('admin-api', 'dashboard');
+        const summary = await edge<Record<string, unknown>>('admin-api', 'dashboard', 'GET', undefined, undefined, signal);
         if (signal?.aborted) throw new Error('Request cancelled.');
         return summary;
       },
@@ -209,7 +209,7 @@ export async function syncInvestBrokerWebMCP(
           throw new Error('Choose deposits or withdrawals.');
         }
         const filter = optionalStatus(input.status);
-        const rows = await edge<Record<string, unknown>[]>('admin-api', input.category);
+        const rows = await edge<Record<string, unknown>[]>('admin-api', input.category, 'GET', undefined, undefined, signal);
         if (signal?.aborted) throw new Error('Request cancelled.');
         return (Array.isArray(rows) ? rows : [])
           .filter(row => !filter || row.status === filter)
@@ -235,7 +235,7 @@ export async function syncInvestBrokerWebMCP(
       annotations: { readOnlyHint: true, untrustedContentHint: true },
       async execute(input, { signal }) {
         requireSession(getContext(), 'admin');
-        const rows = await edge<Record<string, unknown>[]>('admin-api', 'audit-logs', 'GET', undefined, `limit=${boundedLimit(input.limit)}`);
+        const rows = await edge<Record<string, unknown>[]>('admin-api', 'audit-logs', 'GET', undefined, `limit=${boundedLimit(input.limit)}`, signal);
         if (signal?.aborted) throw new Error('Request cancelled.');
         return (Array.isArray(rows) ? rows : []).slice(0, boundedLimit(input.limit)).map(row => ({
           action: row.action ?? null,
