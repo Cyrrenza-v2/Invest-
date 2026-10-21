@@ -533,3 +533,41 @@ input, select, textarea { max-width: 100%; }
   .app-layout .primary-nav { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .app-layout .primary-nav .primary-nav-link { font-size: .76rem; }
 }
+
+/* Reference-inspired portal polish */
+.app-layout .primary-nav{gap:7px;margin-top:18px}
+.app-layout .primary-nav-link,.app-layout .section-nav-link{display:flex;align-items:center;min-height:40px;padding:10px 12px;border-radius:11px;text-decoration:none;font-size:.84rem;font-weight:750;transition:background .16s,color .16s}
+.app-layout .primary-nav-link{color:#43536b;background:transparent}
+.app-layout .primary-nav-link:hover,.app-layout .section-nav-link:hover{background:#edf4ff;color:#145ee8}
+.app-layout .primary-nav-link.is-active{color:#fff;background:linear-gradient(110deg,#1265ef,#2487ff);box-shadow:0 7px 18px #1265ef2b}
+.app-layout .section-nav{display:grid;gap:4px;padding:14px 0 0;border-top:1px solid #e6edf6}
+.app-layout .section-nav-link{min-height:35px;padding:8px 12px;color:#607089;font-weight:600}
+.app-layout .section-nav-link.is-active{color:#145ee8;background:#eaf2ff}
+.app-layout .primary-nav-link:focus-visible,.app-layout .section-nav-link:focus-visible{outline:3px solid #60a5fa;outline-offset:2px}
+.app-layout .topbar{align-items:center;gap:16px;border-bottom:1px solid #e4ebf4;margin-bottom:22px}
+.app-layout .top-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+.app-layout .account-pill{max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:9px 12px;border:1px solid #dce6f3;border-radius:999px;background:#fff;font-size:.78rem;font-weight:700}
+.app-layout.admin-app{background:#071426;color:#e8f1ff;--ink:#e8f1ff;--muted:#9aacc7;--line:#203754}
+.app-layout.admin-app .sidebar{background:#0b1a30;border-color:#203754}
+.app-layout.admin-app .brand,.app-layout.admin-app .sidebar-brand{color:#f0f6ff}
+.app-layout.admin-app .brand small,.app-layout.admin-app .sidebar-foot{color:#9aacc7}
+.app-layout.admin-app .brand-mark{background:linear-gradient(140deg,#1265ef,#10d5b3)}
+.app-layout.admin-app .primary-nav-link{color:#c1d0e6}
+.app-layout.admin-app .primary-nav-link:hover,.app-layout.admin-app .section-nav-link:hover{background:#142d4d;color:#fff}
+.app-layout.admin-app .primary-nav-link.is-active{background:linear-gradient(110deg,#1265ef,#178bff);color:#fff}
+.app-layout.admin-app .section-nav{border-color:#203754}
+.app-layout.admin-app .section-nav-link{color:#9aacc7}
+.app-layout.admin-app .section-nav-link.is-active{color:#7bb5ff;background:#142d4d}
+.app-layout.admin-app .main-panel{background:radial-gradient(ellipse at 78% 0%,#102e51 0%,#071426 44%)}
+.app-layout.admin-app .topbar{border-color:#203754}
+.app-layout.admin-app .eyebrow{color:#86a2c6}
+.app-layout.admin-app .account-pill{color:#dceaff;background:#10233d;border-color:#29496e}
+.app-layout.admin-app .ghost{color:#dceaff;background:#142b48}
+.app-layout.admin-app .ghost:hover{background:#1d3d63}
+.app-layout.admin-app .page-section-card,.app-layout.admin-app .metric-card,.app-layout.admin-app .card,.app-layout.admin-app .table-wrap{color:#e8f1ff;background:#0d2038;border-color:#203754}
+.app-layout.admin-app .metric-card p,.app-layout.admin-app .metric-card span,.app-layout.admin-app .activity-list small,.app-layout.admin-app .app-footer{color:#9aacc7}
+.app-layout.admin-app .data-table th{color:#a9bed9;background:#112844}
+.app-layout.admin-app .data-table td,.app-layout.admin-app .activity-list li{border-color:#203754}
+.app-layout.admin-app input,.app-layout.admin-app select,.app-layout.admin-app textarea{color:#e8f1ff;background:#091a2e;border-color:#29496e}
+@media(max-width:760px){.app-layout{grid-template-columns:minmax(0,1fr)}.app-layout .sidebar{position:relative;top:auto;height:auto;min-height:0;padding:14px;gap:12px}.app-layout .primary-nav{grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;margin-top:8px}.app-layout .primary-nav-link{justify-content:center;text-align:center;padding:9px 5px;font-size:.72rem;line-height:1.2}.app-layout .section-nav{grid-template-columns:repeat(2,minmax(0,1fr));padding-top:10px}.app-layout .section-nav-link{font-size:.78rem}.app-layout .sidebar-foot{padding:8px 4px 0}.app-layout .main-panel{padding:16px 13px 28px}.app-layout .topbar{align-items:flex-start;flex-direction:column;padding:8px 0 16px}.app-layout .top-actions{justify-content:flex-start;width:100%}.app-layout .account-pill{max-width:100%}}
+@media(max-width:420px){.app-layout .primary-nav{grid-template-columns:repeat(2,minmax(0,1fr))}.app-layout .section-nav{grid-template-columns:1fr}.app-layout .metrics-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
