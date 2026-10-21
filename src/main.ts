@@ -222,8 +222,9 @@ function adminContent(p: string): string {
 }
 async function render() {
   const id = ++sequence; const p = path(); d.error = ''; d.notice = '';
-  if (p === '/welcome') { app!.innerHTML = welcome(); return; }
+  if (p === '/welcome') { clearInvestBrokerWebMCP(); app!.innerHTML = welcome(); return; }
   if (['/login/user','/login/admin','/register/user','/register/admin'].includes(p)) {
+    clearInvestBrokerWebMCP();
     if ((p.includes('/admin') ? 'admin' : 'user') !== ROLE) { go('/welcome'); return; }
     app!.innerHTML = authPage(p.startsWith('/register') ? 'register' : 'login'); return;
   }
