@@ -45,6 +45,7 @@ function optionalStatus(value: unknown): string | null {
 function requireSession(ctx: WebMCPContext, role: 'user' | 'admin') {
   if (!ctx.authenticated || !ctx.userId) throw new Error('Sign in again to use Invest Broker tools.');
   if (ctx.role !== role) throw new Error('This tool is not available in the current workspace.');
+  if (role === 'user' && ctx.trustedAdmin) throw new Error('Administrator accounts cannot use customer tools.');
   if (role === 'admin' && (!ctx.trustedAdmin || !ctx.aal2)) {
     throw new Error('CEO authorization and verified MFA (AAL2) are required.');
   }
@@ -67,7 +68,7 @@ export async function syncInvestBrokerWebMCP(
   const ctx = getContext();
   const context = modelContext();
   const permitted = ctx.authenticated && !!ctx.userId &&
-    (ctx.role === 'user' || (ctx.role === 'admin' && ctx.trustedAdmin && ctx.aal2));
+    ((ctx.role === 'user' && !ctx.trustedAdmin) || (ctx.role === 'admin' && ctx.trustedAdmin && ctx.aal2));
   const nextKey = permitted ? `${ctx.role}:${ctx.userId}:${ctx.aal2}` : '';
 
   if (!context || !permitted) {
