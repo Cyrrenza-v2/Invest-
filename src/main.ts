@@ -1,4 +1,5 @@
 import { isAdmin, supabase, type Profile, type Row, type SupabaseUser } from './supabase';
+import { clearInvestBrokerWebMCP, syncInvestBrokerWebMCP } from './webmcp';
 
 type Role = 'user' | 'admin';
 type RecordRow = Row & { id?: string; user_id?: string; currency?: string; status?: string; created_at?: string; amount?: number; debit_amount?: number; credit_amount?: number; description?: string; entry_type?: string; principal?: number; investment_code?: string; deposit_code?: string; withdrawal_code?: string; name?: string; full_name?: string; user_code?: string; approval_status?: string; account_status?: string; kyc_status?: string };
@@ -18,8 +19,8 @@ const status = (v: unknown) => { const s = String(v || 'unknown'); const t = ['a
 const path = () => location.hash.replace(/^#/, '') || '/welcome';
 const go = (p: string) => { location.hash = p; };
 const err = (x: unknown) => x instanceof Error ? x.message : 'Unexpected error';
-async function edge<T>(fn: string, endpoint: string, method: 'GET'|'POST' = 'GET', body?: Row, query?: string): Promise<T> {
-  const r = await supabase.edge<{data:T}|T>(fn, endpoint, { method, body, query });
+async function edge<T>(fn: string, endpoint: string, method: 'GET'|'POST' = 'GET', body?: Row, query?: string, signal?: AbortSignal): Promise<T> {
+  const r = await supabase.edge<{data:T}|T>(fn, endpoint, { method, body, query, signal });
   return r && typeof r === 'object' && 'data' in r ? (r as {data:T}).data : r as T;
 }
 function table(head: string[], rows: string[][], empty = 'No records found.') {
@@ -221,13 +222,15 @@ function adminContent(p: string): string {
 }
 async function render() {
   const id = ++sequence; const p = path(); d.error = ''; d.notice = '';
-  if (p === '/welcome') { app!.innerHTML = welcome(); return; }
+  if (p === '/welcome') { clearInvestBrokerWebMCP(); app!.innerHTML = welcome(); return; }
   if (['/login/user','/login/admin','/register/user','/register/admin'].includes(p)) {
+    clearInvestBrokerWebMCP();
     if ((p.includes('/admin') ? 'admin' : 'user') !== ROLE) { go('/welcome'); return; }
     app!.innerHTML = authPage(p.startsWith('/register') ? 'register' : 'login'); return;
   }
   if ((ROLE === 'user' && p.startsWith('/admin')) || (ROLE === 'admin' && p.startsWith('/user'))) { app!.innerHTML = shell('<section class="state-card"><h2>Separate workspace</h2><p>This URL belongs to the other workspace. Your current screen was not redirected. Open the correct user or admin app URL to continue.</p></section>', p); return; }
   d.user = await supabase.currentUser();
+  void syncInvestBrokerWebMCP(() => ({ role: ROLE, userId: d.user?.id ?? null, authenticated: !!d.user, trustedAdmin: !!d.user && isAdmin(d.user), aal2: currentAssuranceLevel() === 'aal2' }), edge);
   if (!d.user) { app!.innerHTML = authPage('login'); return; }
   if (ROLE === 'user' && isAdmin(d.user)) { app!.innerHTML = shell('<section class="state-card"><h2>Administrator account detected</h2><p>This account is restricted from the customer API. Open the Admin CEO app URL to continue.</p><button class="ghost" data-action="logout">Sign out</button></section>',p); return; }
   if (ROLE === 'admin' && !isAdmin(d.user)) { app!.innerHTML = shell('<section class="state-card"><h2>Administrator access required</h2><p>This account has no trusted admin role. Sign in with the authorized Admin CEO account.</p></section>',p); return; }
@@ -343,7 +346,7 @@ app.addEventListener('click', event => {
   if (action === 'cancel-mfa') { pendingMfa = null; void supabase.signOut().finally(() => go('/login/admin')); return; }
   if (action === 'route' && target.dataset.route) { go(target.dataset.route); return; }
   if (action === 'refresh') { void render(); return; }
-  if (action === 'logout') { void supabase.signOut().finally(() => { d.user = null; d.profile = null; go('/welcome'); }); return; }
+  if (action === 'logout') { clearInvestBrokerWebMCP(); void supabase.signOut().finally(() => { d.user = null; d.profile = null; go('/welcome'); }); return; }
   if (action === 'review-user' && ROLE === 'admin' && target.dataset.userId && target.dataset.review) {
     const review = target.dataset.review; const reason = review === 'reject' ? prompt('Optional reason for rejection:') : '';
     if (review === 'reject' && reason === null) return;
